@@ -9,7 +9,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.thunderrole.cryptochart.axis.BaseAxis;
+import io.github.thunderrole.cryptochart.axis.YAxis;
 import io.github.thunderrole.cryptochart.model.ChartEntry;
+import io.github.thunderrole.cryptochart.utils.LogUtils;
 
 /**
  * 功能描述：
@@ -18,6 +21,9 @@ import io.github.thunderrole.cryptochart.model.ChartEntry;
  */
 public abstract class BaseAdapter<VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH> {
     protected List<ChartEntry> mList = new ArrayList<>();
+    protected YAxis mYAxis;
+    protected BaseAxis mXAxis;
+
 
     @NonNull
     @Override
@@ -39,18 +45,27 @@ public abstract class BaseAdapter<VH extends RecyclerView.ViewHolder> extends Re
         return mList.size();
     }
 
-    public void setData(List<ChartEntry> list){
+    public List<ChartEntry> getData(){
+        return mList;
+    }
+
+    public void setYAxis(YAxis axis){
+        mYAxis = axis;
+    }
+
+    public <D extends ChartEntry> void setData(List<D> list){
         mList.clear();
         mList.addAll(list);
+
         notifyDataSetChanged();
     }
 
-    public void addFrontData(List<ChartEntry> list){
+    public <D extends ChartEntry> void addFrontData(List<D> list){
         mList.addAll(0,list);
         notifyDataSetChanged();
     }
 
-    public void addLastData(List<ChartEntry> list){
+    public <D extends ChartEntry> void addLastData(List<D> list){
         int oldSize = mList.size();
         mList.addAll(list);
         notifyItemRangeInserted(oldSize, mList.size());
