@@ -12,8 +12,8 @@ import java.util.List;
 import io.github.thunderrole.cryptochart.R;
 import io.github.thunderrole.cryptochart.itemview.BarChartItem;
 import io.github.thunderrole.cryptochart.model.ChartEntry;
+import io.github.thunderrole.cryptochart.model.Point;
 import io.github.thunderrole.cryptochart.utils.EntryUtils;
-import io.github.thunderrole.cryptochart.utils.LogUtils;
 
 /**
  * 功能描述：
@@ -24,7 +24,7 @@ public class BarChartAdapter extends BaseAdapter<BarChartAdapter.BarHolder>{
 
     @Override
     protected BarHolder createHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_base, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_barchart, parent, false);
         return new BarHolder(view);
     }
 
@@ -33,21 +33,14 @@ public class BarChartAdapter extends BaseAdapter<BarChartAdapter.BarHolder>{
         List<ChartEntry> entries = mYAxis.getVisibleEntry();
         ChartEntry maxHigh = EntryUtils.findMaxValue(entries);
         ChartEntry minLow = EntryUtils.findMinValue(entries);
-        if (maxHigh == null){
-            maxHigh = EntryUtils.findMaxValue(mList);
-        }
-        if (minLow == null){
-            minLow = EntryUtils.findMinValue(mList);
-        }
-        float scale = 10f;
+        //TODO 查找区间最大最小值
 //        if (maxHigh != null && minLow != null){
 //            float diff = maxHigh.getValue() - minLow.getValue();
 //            scale = holder.barItem.getHeight() / diff;
 //        }
 
-        ChartEntry entry = mList.get(position);
-        holder.barItem.setEntry(entry,scale);
-
+        Point entry = mPoints.get(position);
+        holder.barItem.setPoint(entry,mScale);
     }
 
     class BarHolder extends RecyclerView.ViewHolder{
@@ -57,6 +50,10 @@ public class BarChartAdapter extends BaseAdapter<BarChartAdapter.BarHolder>{
             super(itemView);
             barItem = itemView.findViewById(R.id.bci_bar);
         }
+    }
+
+    public interface OnClickListener{
+        void onClickListener();
     }
 
 }

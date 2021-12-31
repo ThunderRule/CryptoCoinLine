@@ -1,6 +1,5 @@
 package io.github.thunderrole.cryptochart.adapter;
 
-import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -12,7 +11,8 @@ import java.util.List;
 import io.github.thunderrole.cryptochart.axis.BaseAxis;
 import io.github.thunderrole.cryptochart.axis.YAxis;
 import io.github.thunderrole.cryptochart.model.ChartEntry;
-import io.github.thunderrole.cryptochart.utils.LogUtils;
+import io.github.thunderrole.cryptochart.model.Point;
+import io.github.thunderrole.cryptochart.utils.EntryUtils;
 
 /**
  * 功能描述：
@@ -21,8 +21,10 @@ import io.github.thunderrole.cryptochart.utils.LogUtils;
  */
 public abstract class BaseAdapter<VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH> {
     protected List<ChartEntry> mList = new ArrayList<>();
+    protected List<Point> mPoints = new ArrayList<>();
     protected YAxis mYAxis;
     protected BaseAxis mXAxis;
+    protected float mScale = 1.f;
 
 
     @NonNull
@@ -53,21 +55,28 @@ public abstract class BaseAdapter<VH extends RecyclerView.ViewHolder> extends Re
         mYAxis = axis;
     }
 
+    public void setScale(float scale){
+        mScale = scale;
+        notifyDataSetChanged();
+    }
+
     public <D extends ChartEntry> void setData(List<D> list){
         mList.clear();
         mList.addAll(list);
-
+        mPoints = EntryUtils.createPoints(mList);
         notifyDataSetChanged();
     }
 
     public <D extends ChartEntry> void addFrontData(List<D> list){
         mList.addAll(0,list);
+        mPoints = EntryUtils.createPoints(mList);
         notifyDataSetChanged();
     }
 
     public <D extends ChartEntry> void addLastData(List<D> list){
         int oldSize = mList.size();
         mList.addAll(list);
+        mPoints = EntryUtils.createPoints(mList);
         notifyItemRangeInserted(oldSize, mList.size());
     }
 
@@ -81,6 +90,7 @@ public abstract class BaseAdapter<VH extends RecyclerView.ViewHolder> extends Re
             mList.add(entry);
             notifyItemChanged(mList.size());
         }
+        mPoints = EntryUtils.createPoints(mList);
     }
 
 }

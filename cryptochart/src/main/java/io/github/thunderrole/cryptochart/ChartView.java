@@ -2,6 +2,9 @@ package io.github.thunderrole.cryptochart;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -15,6 +18,7 @@ import java.util.List;
 
 import io.github.thunderrole.cryptochart.adapter.BarChartAdapter;
 import io.github.thunderrole.cryptochart.adapter.BaseAdapter;
+import io.github.thunderrole.cryptochart.adapter.CandleCharAdapter;
 import io.github.thunderrole.cryptochart.axis.BaseAxis;
 import io.github.thunderrole.cryptochart.axis.XAxis;
 import io.github.thunderrole.cryptochart.axis.YAxis;
@@ -35,12 +39,15 @@ public class ChartView extends FrameLayout {
     private YAxis mYAxis;
     private BaseAdapter<? extends RecyclerView.ViewHolder> mAdapter;
 
+    private ScaleGestureDetector mGesture;
+    private float mScaleFactor = 1.f;
+
     public ChartView(@NonNull Context context) {
-        this(context,null);
+        this(context, null);
     }
 
     public ChartView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs,0);
+        this(context, attrs, 0);
     }
 
     public ChartView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
@@ -61,6 +68,19 @@ public class ChartView extends FrameLayout {
         addView(mRecyclerView);
         addView(mYAxis);
 
+        mGesture = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                mScaleFactor *= detector.getScaleFactor();
+                if (mAdapter != null) {
+                    mAdapter.setScale(mScaleFactor);
+
+                    invalidate();
+                }
+                return true;
+            }
+        });
+
     }
 
     @Override
@@ -72,60 +92,79 @@ public class ChartView extends FrameLayout {
         mRecyclerView.setLayoutParams(params);
     }
 
-    public <D extends ChartEntry> void setData(int type, List<D> list){
-        switch (type){
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        mGesture.onTouchEvent(event);
+        return true;
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if (ev.getPointerCount() > 1) {
+            return true;
+        }
+        return super.onInterceptTouchEvent(ev);
+    }
+
+    public <D extends ChartEntry> void setData(int type, List<D> list) {
+        switch (type) {
             case ChartStyle.BAR_CHART:
                 mAdapter = new BarChartAdapter();
-                mAdapter.setYAxis(mYAxis);
-                mRecyclerView.setAdapter(mAdapter);
-                mAdapter.setData(list);
-                mYAxis.setVisibleEntry(getVisibleEntry());
+                break;
+            case ChartStyle.CANDLE_CHART:
+                mAdapter = new CandleCharAdapter();
                 break;
             default:
         }
+        mRecyclerView.setAdapter(mAdapter);
+        mAdapter.setYAxis(mYAxis);
+        mAdapter.setData(list);
+        mYAxis.setVisibleEntry(getVisibleEntry());
     }
 
-    private float caculateItemWith(){
+    private float caculateItemWith() {
         View child = mRecyclerView.getChildAt(0);
-        if (child != null){
+        if (child != null) {
             return child.getWidth();
-        }else {
+        } else {
             return -1;
         }
     }
 
-    public void setXScaleNumber(int number){
+    public void setXScaleNumber(int number) {
         mXAxis.setScaleNumber(number);
     }
-    public void setYScaleNumber(int number){
+
+    public void setYScaleNumber(int number) {
         mXAxis.setScaleNumber(number);
     }
 
     /**
      * 获取屏幕中显示的数据集
+     *
      * @return
      */
-    private List<ChartEntry> getVisibleEntry(){
+    private List<ChartEntry> getVisibleEntry() {
         int firstPosition = mLayoutManaget.findFirstVisibleItemPosition();
         int lastPosition = mLayoutManaget.findLastVisibleItemPosition();
         List<ChartEntry> list = mAdapter.getData();
-        if (firstPosition == -1 && lastPosition == -1){
+        if (firstPosition == -1 && lastPosition == -1) {
             int count = (int) (getWidth() / caculateItemWith());
-            if (list.size() > count){
-                return list.subList(0,count);
-            }else {
+            if (list.size() > count) {
+                return list.subList(0, count);
+            } else {
                 return list;
             }
-        }else{
-            if (list.size() > lastPosition){
-                return list.subList(firstPosition,lastPosition);
-            }else {
+        } else {
+            if (list.size() > lastPosition) {
+                return list.subList(firstPosition, lastPosition);
+            } else {
                 return list;
             }
         }
     }
 
-    private void listenRecyclerScroll(){
+    private void listenRecyclerScroll() {
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {

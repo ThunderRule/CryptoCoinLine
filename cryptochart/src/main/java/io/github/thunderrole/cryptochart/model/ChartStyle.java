@@ -7,4 +7,5 @@ package io.github.thunderrole.cryptochart.model;
  */
 public class ChartStyle {
     public static final int BAR_CHART = 1;
+    public static final int CANDLE_CHART = 2;
 }
