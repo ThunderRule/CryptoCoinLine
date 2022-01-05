@@ -1,5 +1,6 @@
 package io.github.thunderrole.cryptochart.adapter;
 
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -11,7 +12,7 @@ import java.util.List;
 import io.github.thunderrole.cryptochart.axis.BaseAxis;
 import io.github.thunderrole.cryptochart.axis.YAxis;
 import io.github.thunderrole.cryptochart.model.ChartEntry;
-import io.github.thunderrole.cryptochart.model.Point;
+import io.github.thunderrole.cryptochart.model.LinkChartEntry;
 import io.github.thunderrole.cryptochart.utils.EntryUtils;
 
 /**
@@ -20,12 +21,18 @@ import io.github.thunderrole.cryptochart.utils.EntryUtils;
  * @date 2021/12/29
  */
 public abstract class BaseAdapter<VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH> {
+    protected float mHeight;
     protected List<ChartEntry> mList = new ArrayList<>();
-    protected List<Point> mPoints = new ArrayList<>();
+    protected List<LinkChartEntry> mLinkChartEntries = new ArrayList<>();
     protected YAxis mYAxis;
     protected BaseAxis mXAxis;
     protected float mScale = 1.f;
+    protected float mScaleFactor = 0.5f;
+    private OnClickListener mListener;
 
+    public BaseAdapter(float height){
+        mHeight = height;
+    }
 
     @NonNull
     @Override
@@ -36,11 +43,24 @@ public abstract class BaseAdapter<VH extends RecyclerView.ViewHolder> extends Re
     @Override
     public void onBindViewHolder(@NonNull VH holder, int position) {
         bindView(holder, position);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mListener != null){
+                    mListener.onClick(mList.get(holder.getAdapterPosition()));
+                }
+            }
+        });
     }
 
     protected abstract VH createHolder(@NonNull ViewGroup parent, int viewType);
 
     protected abstract void bindView(VH holder, int position);
+
+    public void setScaleFactor(float scaleFactor){
+        mScaleFactor = scaleFactor;
+        notifyDataSetChanged();
+    }
 
     @Override
     public int getItemCount() {
@@ -55,28 +75,23 @@ public abstract class BaseAdapter<VH extends RecyclerView.ViewHolder> extends Re
         mYAxis = axis;
     }
 
-    public void setScale(float scale){
-        mScale = scale;
-        notifyDataSetChanged();
-    }
-
     public <D extends ChartEntry> void setData(List<D> list){
         mList.clear();
         mList.addAll(list);
-        mPoints = EntryUtils.createPoints(mList);
+        mLinkChartEntries = EntryUtils.createPoints(mList);
         notifyDataSetChanged();
     }
 
     public <D extends ChartEntry> void addFrontData(List<D> list){
         mList.addAll(0,list);
-        mPoints = EntryUtils.createPoints(mList);
+        mLinkChartEntries = EntryUtils.createPoints(mList);
         notifyDataSetChanged();
     }
 
     public <D extends ChartEntry> void addLastData(List<D> list){
         int oldSize = mList.size();
         mList.addAll(list);
-        mPoints = EntryUtils.createPoints(mList);
+        mLinkChartEntries = EntryUtils.createPoints(mList);
         notifyItemRangeInserted(oldSize, mList.size());
     }
 
@@ -90,7 +105,16 @@ public abstract class BaseAdapter<VH extends RecyclerView.ViewHolder> extends Re
             mList.add(entry);
             notifyItemChanged(mList.size());
         }
-        mPoints = EntryUtils.createPoints(mList);
+        mLinkChartEntries = EntryUtils.createPoints(mList);
     }
+
+    public void setOnClickListener(OnClickListener listener){
+        mListener = listener;
+    }
+
+    public interface OnClickListener{
+        void onClick(ChartEntry entry);
+    }
+
 
 }

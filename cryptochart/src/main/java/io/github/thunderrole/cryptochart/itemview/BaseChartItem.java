@@ -6,7 +6,7 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import io.github.thunderrole.cryptochart.model.Point;
+import io.github.thunderrole.cryptochart.model.LinkChartEntry;
 import io.github.thunderrole.cryptochart.utils.UIUtils;
 
 /**
@@ -16,8 +16,9 @@ import io.github.thunderrole.cryptochart.utils.UIUtils;
  */
 public class BaseChartItem extends View {
 
-    protected Point mPoint;
+    protected LinkChartEntry mLinkChartEntry;
     protected float mScale = 1.0f;
+    protected float mFingerScale = 0.5f;
 
 
     public BaseChartItem(Context context) {
@@ -35,15 +36,16 @@ public class BaseChartItem extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int width = (int) (UIUtils.dp2px(getContext(),10f) * mScale);
+        int width = (int) (UIUtils.dp2px(getContext(),40f) * mFingerScale);
         int mode = MeasureSpec.getMode(widthMeasureSpec);
         int spec = MeasureSpec.makeMeasureSpec(width, mode);
         setMeasuredDimension(spec,heightMeasureSpec);
     }
 
-    public void setPoint(Point point,float scale){
-        mPoint = point;
+    public void setPoint(LinkChartEntry linkChartEntry, float scale, float fingerScale){
+        mLinkChartEntry = linkChartEntry;
         mScale = scale;
+        mFingerScale = fingerScale;
         invalidate();
     }
 }

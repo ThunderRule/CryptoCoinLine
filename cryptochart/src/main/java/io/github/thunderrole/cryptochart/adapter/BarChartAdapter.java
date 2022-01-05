@@ -12,8 +12,9 @@ import java.util.List;
 import io.github.thunderrole.cryptochart.R;
 import io.github.thunderrole.cryptochart.itemview.BarChartItem;
 import io.github.thunderrole.cryptochart.model.ChartEntry;
-import io.github.thunderrole.cryptochart.model.Point;
+import io.github.thunderrole.cryptochart.model.LinkChartEntry;
 import io.github.thunderrole.cryptochart.utils.EntryUtils;
+import io.github.thunderrole.cryptochart.utils.LogUtils;
 
 /**
  * 功能描述：
@@ -21,6 +22,10 @@ import io.github.thunderrole.cryptochart.utils.EntryUtils;
  * @date 2021/12/30
  */
 public class BarChartAdapter extends BaseAdapter<BarChartAdapter.BarHolder>{
+
+    public BarChartAdapter(float height) {
+        super(height);
+    }
 
     @Override
     protected BarHolder createHolder(@NonNull ViewGroup parent, int viewType) {
@@ -34,13 +39,14 @@ public class BarChartAdapter extends BaseAdapter<BarChartAdapter.BarHolder>{
         ChartEntry maxHigh = EntryUtils.findMaxValue(entries);
         ChartEntry minLow = EntryUtils.findMinValue(entries);
         //TODO 查找区间最大最小值
-//        if (maxHigh != null && minLow != null){
-//            float diff = maxHigh.getValue() - minLow.getValue();
-//            scale = holder.barItem.getHeight() / diff;
-//        }
+        if (maxHigh != null && minLow != null){
+            float diff = maxHigh.getValue();
+            mScale = mHeight / diff * mScaleFactor;
+        }
 
-        Point entry = mPoints.get(position);
-        holder.barItem.setPoint(entry,mScale);
+        LinkChartEntry entry = mLinkChartEntries.get(position);
+
+        holder.barItem.setPoint(entry,mScale,mScaleFactor);
     }
 
     class BarHolder extends RecyclerView.ViewHolder{
@@ -50,10 +56,6 @@ public class BarChartAdapter extends BaseAdapter<BarChartAdapter.BarHolder>{
             super(itemView);
             barItem = itemView.findViewById(R.id.bci_bar);
         }
-    }
-
-    public interface OnClickListener{
-        void onClickListener();
     }
 
 }

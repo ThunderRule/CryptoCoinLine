@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.github.thunderrole.cryptochart.model.ChartEntry;
-import io.github.thunderrole.cryptochart.model.Point;
+import io.github.thunderrole.cryptochart.model.LinkChartEntry;
 
 /**
  * 功能描述：
@@ -43,7 +43,7 @@ public class EntryUtils {
         return minEntry;
     }
 
-    public static ChartEntry finMaxPrice(List<ChartEntry> list){
+    public static ChartEntry findMaxPrice(List<ChartEntry> list){
         float max = 0;
         ChartEntry maxEntry = null;
         if (list != null){
@@ -73,17 +73,17 @@ public class EntryUtils {
         return minEntry;
     }
 
-    public static List<Point> createPoints(List<ChartEntry> list){
-        ArrayList<Point> points = new ArrayList<>();
+    public static List<LinkChartEntry> createPoints(List<ChartEntry> list){
+        ArrayList<LinkChartEntry> linkChartEntries = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
             if (i == 0){
-                points.add(new Point(list.get(i),null,list.get(i+1)));
+                linkChartEntries.add(new LinkChartEntry(list.get(i),null,list.get(i+1)));
             }else if (i < list.size()-1){
-                points.add(new Point(list.get(i),list.get(i-1),list.get(i+1)));
+                linkChartEntries.add(new LinkChartEntry(list.get(i),list.get(i-1),list.get(i+1)));
             }else {
-                points.add(new Point(list.get(i),list.get(i-1),null));
+                linkChartEntries.add(new LinkChartEntry(list.get(i),list.get(i-1),null));
             }
         }
-        return points;
+        return linkChartEntries;
     }
 }

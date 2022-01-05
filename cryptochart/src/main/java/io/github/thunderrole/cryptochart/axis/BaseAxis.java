@@ -11,11 +11,16 @@ import io.github.thunderrole.cryptochart.model.ChartEntry;
  */
 public interface BaseAxis {
 
-    float setVisibleEntry(List<ChartEntry> entries);
+    void setVisibleEntry(List<ChartEntry> entries);
 
     List<ChartEntry> getVisibleEntry();
 
     void setFormat(String format);
 
-    void setScaleNumber(int number);
+    void setLableNum(int number);
+
+    void changeData(List<ChartEntry> entries);
+
+    int getLableNum();
+
 }

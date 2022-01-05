@@ -25,6 +25,7 @@ public class LogUtils {
     }
 
     public static void d(ChartEntry entry){
+        String simpleName = entry.getClass().getSimpleName();
         if (entry != null){
             StringBuilder builder = new StringBuilder();
             String string = builder.append(", high = ")
@@ -41,9 +42,9 @@ public class LogUtils {
                     .append(new SimpleDateFormat("yyy-MM-dd").format(new Date(entry.getDate())))
                     .append("\n")
                     .toString();
-            d("Entry",string);
+            d(simpleName,string);
         }else {
-            d("Entry","this entry is NULL");
+            d(simpleName,"this entry is NULL");
         }
     }
 

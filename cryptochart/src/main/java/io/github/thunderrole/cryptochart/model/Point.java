@@ -1,32 +1,24 @@
 package io.github.thunderrole.cryptochart.model;
 
-import java.util.List;
-
 /**
  * 功能描述：
  *
- * @date 2021/12/31
+ * @date 2022/1/5
  */
 public class Point {
-    private ChartEntry entry;
-    private ChartEntry preEntry;
-    private ChartEntry afterEntry;
+    private float x;
+    private float y;
 
-    public Point(ChartEntry entry, ChartEntry preEntry, ChartEntry afterEntry) {
-        this.entry = entry;
-        this.preEntry = preEntry;
-        this.afterEntry = afterEntry;
+    public Point(float x, float y) {
+        this.x = x;
+        this.y = y;
     }
 
-    public ChartEntry getEntry() {
-        return entry;
+    public float getX() {
+        return x;
     }
 
-    public ChartEntry getPreEntry() {
-        return preEntry;
-    }
-
-    public ChartEntry getAfterEntry() {
-        return afterEntry;
+    public float getY() {
+        return y;
     }
 }

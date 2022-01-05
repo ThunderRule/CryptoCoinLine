@@ -2,29 +2,32 @@ package io.github.thunderrole.cryptochart;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.GestureDetector;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.github.thunderrole.cryptochart.adapter.BarChartAdapter;
 import io.github.thunderrole.cryptochart.adapter.BaseAdapter;
 import io.github.thunderrole.cryptochart.adapter.CandleCharAdapter;
-import io.github.thunderrole.cryptochart.axis.BaseAxis;
 import io.github.thunderrole.cryptochart.axis.XAxis;
 import io.github.thunderrole.cryptochart.axis.YAxis;
 import io.github.thunderrole.cryptochart.model.ChartEntry;
 import io.github.thunderrole.cryptochart.model.ChartStyle;
+import io.github.thunderrole.cryptochart.model.Point;
 import io.github.thunderrole.cryptochart.utils.LogUtils;
+import io.github.thunderrole.cryptochart.utils.UIUtils;
 
 /**
  * 功能描述：
@@ -38,9 +41,11 @@ public class ChartView extends FrameLayout {
     private XAxis mXAxis;
     private YAxis mYAxis;
     private BaseAdapter<? extends RecyclerView.ViewHolder> mAdapter;
+    private List<ChartEntry> mList = new ArrayList<>();
+    private int mChartType;
 
     private ScaleGestureDetector mGesture;
-    private float mScaleFactor = 1.f;
+    private float mScaleFactor = 0.5f;
 
     public ChartView(@NonNull Context context) {
         this(context, null);
@@ -72,10 +77,16 @@ public class ChartView extends FrameLayout {
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
                 mScaleFactor *= detector.getScaleFactor();
-                if (mAdapter != null) {
-                    mAdapter.setScale(mScaleFactor);
+                if (mScaleFactor <= 0.05f) {
+                    mScaleFactor = 0.05f;
+                    return false;
+                } else if (mScaleFactor >= 1f) {
+                    mScaleFactor = 1f;
+                    return false;
+                }
 
-                    invalidate();
+                if (mAdapter != null) {
+                    mAdapter.setScaleFactor(mScaleFactor);
                 }
                 return true;
             }
@@ -106,37 +117,51 @@ public class ChartView extends FrameLayout {
         return super.onInterceptTouchEvent(ev);
     }
 
-    public <D extends ChartEntry> void setData(int type, List<D> list) {
-        switch (type) {
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        switch (mChartType) {
             case ChartStyle.BAR_CHART:
-                mAdapter = new BarChartAdapter();
+                mAdapter = new BarChartAdapter(getMeasuredHeight() - UIUtils.dp2px(getContext(), 30f));
                 break;
             case ChartStyle.CANDLE_CHART:
-                mAdapter = new CandleCharAdapter();
+                mAdapter = new CandleCharAdapter(getMeasuredHeight() - UIUtils.dp2px(getContext(), 30f));
                 break;
             default:
         }
         mRecyclerView.setAdapter(mAdapter);
         mAdapter.setYAxis(mYAxis);
-        mAdapter.setData(list);
+        mAdapter.setData(mList);
         mYAxis.setVisibleEntry(getVisibleEntry());
+        mRecyclerView.scrollToPosition(mList.size() - 1);
+
+        mAdapter.setOnClickListener(new BaseAdapter.OnClickListener() {
+            @Override
+            public void onClick(ChartEntry entry) {
+                switch (mChartType) {
+                    case ChartStyle.CANDLE_CHART:
+                        Toast.makeText(getContext(), entry.getDate() + "", Toast.LENGTH_LONG).show();
+                        break;
+                    default:
+                }
+            }
+        });
     }
 
-    private float caculateItemWith() {
-        View child = mRecyclerView.getChildAt(0);
-        if (child != null) {
-            return child.getWidth();
-        } else {
-            return -1;
-        }
+    public <D extends ChartEntry> void setData(int type, List<D> list) {
+        mChartType = type;
+        mList.clear();
+        mList.addAll(list);
     }
 
-    public void setXScaleNumber(int number) {
-        mXAxis.setScaleNumber(number);
+
+    public void setXLableNum(int number) {
+        mXAxis.setLableNum(number);
     }
 
-    public void setYScaleNumber(int number) {
-        mXAxis.setScaleNumber(number);
+    public void setYLableNum(int number) {
+        mXAxis.setLableNum(number);
     }
 
     /**
@@ -147,20 +172,16 @@ public class ChartView extends FrameLayout {
     private List<ChartEntry> getVisibleEntry() {
         int firstPosition = mLayoutManaget.findFirstVisibleItemPosition();
         int lastPosition = mLayoutManaget.findLastVisibleItemPosition();
+        LogUtils.d("firstP = " + firstPosition + ", lastP = " + lastPosition);
         List<ChartEntry> list = mAdapter.getData();
-        if (firstPosition == -1 && lastPosition == -1) {
-            int count = (int) (getWidth() / caculateItemWith());
-            if (list.size() > count) {
-                return list.subList(0, count);
+        if (firstPosition != -1 && lastPosition != -1) {
+            if (list.size() > lastPosition + 1) {
+                return list.subList(firstPosition, lastPosition + 1);
             } else {
                 return list;
             }
         } else {
-            if (list.size() > lastPosition) {
-                return list.subList(firstPosition, lastPosition);
-            } else {
-                return list;
-            }
+            return list;
         }
     }
 
@@ -168,16 +189,37 @@ public class ChartView extends FrameLayout {
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                List<ChartEntry> visibleEntry = getVisibleEntry();
-                mXAxis.setVisibleEntry(visibleEntry);
-                mYAxis.setVisibleEntry(visibleEntry);
+                if (newState == RecyclerView.SCROLL_STATE_IDLE){
+                    mAdapter.notifyDataSetChanged();
+                }
+                LogUtils.d("滚动状态：" + newState);
+
             }
 
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
+                LogUtils.d("滚动结果：" + dx);
+                List<ChartEntry> visibleEntry = getVisibleEntry();
+//                mXAxis.setVisibleEntry(visibleEntry);
+                mYAxis.setVisibleEntry(visibleEntry);
+
+                int lableNum = mXAxis.getLableNum();
+                ArrayList<ChartEntry> lableEntry = new ArrayList<>();
+                int interval = getWidth() / lableNum;
+                int nextInterval = 0;
+                for (int i = 0; i < lableNum + 1; i++) {
+                    View view = recyclerView.findChildViewUnder(nextInterval, 30);
+                    RecyclerView.ViewHolder holder = recyclerView.getChildViewHolder(view);
+                    int position = holder.getAdapterPosition();
+                    ChartEntry entry = mList.get(position);
+                    lableEntry.add(entry);
+                    nextInterval += interval;
+                }
+                mXAxis.changeData(lableEntry);
             }
         });
+
     }
 
 }

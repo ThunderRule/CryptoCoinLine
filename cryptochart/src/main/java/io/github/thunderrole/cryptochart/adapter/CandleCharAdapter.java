@@ -10,11 +10,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import io.github.thunderrole.cryptochart.R;
-import io.github.thunderrole.cryptochart.itemview.BarChartItem;
 import io.github.thunderrole.cryptochart.itemview.CandleChartItem;
 import io.github.thunderrole.cryptochart.model.ChartEntry;
-import io.github.thunderrole.cryptochart.model.Point;
+import io.github.thunderrole.cryptochart.model.LinkChartEntry;
 import io.github.thunderrole.cryptochart.utils.EntryUtils;
+import io.github.thunderrole.cryptochart.utils.LogUtils;
 
 /**
  * 功能描述：
@@ -22,6 +22,12 @@ import io.github.thunderrole.cryptochart.utils.EntryUtils;
  * @date 2021/12/31
  */
 public class CandleCharAdapter extends BaseAdapter<CandleCharAdapter.CandleHolder> {
+
+    private OnClickListener mListener;
+
+    public CandleCharAdapter(float height) {
+        super(height);
+    }
 
     @Override
     protected CandleHolder createHolder(@NonNull ViewGroup parent, int viewType) {
@@ -32,18 +38,19 @@ public class CandleCharAdapter extends BaseAdapter<CandleCharAdapter.CandleHolde
     @Override
     protected void bindView(CandleHolder holder, int position) {
         List<ChartEntry> entries = mYAxis.getVisibleEntry();
-        ChartEntry maxHigh = EntryUtils.finMaxPrice(entries);
-        ChartEntry minLow = EntryUtils.finMaxPrice(entries);
+        ChartEntry maxHigh = EntryUtils.findMaxPrice(entries);
+        ChartEntry minLow = EntryUtils.findMinPrice(entries);
 
         //TODO 查找区间最大最小值
-        float scale = 0.5f;
         if (maxHigh != null && minLow != null) {
             float diff = maxHigh.getHigh() - minLow.getLow();
-            scale = holder.candleItem.getHeight() / diff;
+            mScale = mHeight/ diff;
         }
 
-        Point entry = mPoints.get(position);
-        holder.candleItem.setPoint(entry, scale * mScale, minLow);
+        LinkChartEntry entry = mLinkChartEntries.get(position);
+
+        holder.candleItem.setPoint(entry, mScale, mScaleFactor, minLow);
+
     }
 
     protected class CandleHolder extends RecyclerView.ViewHolder {
@@ -54,5 +61,7 @@ public class CandleCharAdapter extends BaseAdapter<CandleCharAdapter.CandleHolde
             candleItem = itemView.findViewById(R.id.cci_candle);
         }
     }
+
+
 
 }
