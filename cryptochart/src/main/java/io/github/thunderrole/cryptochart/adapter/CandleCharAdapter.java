@@ -11,6 +11,7 @@ import java.util.List;
 
 import io.github.thunderrole.cryptochart.R;
 import io.github.thunderrole.cryptochart.itemview.CandleChartItem;
+import io.github.thunderrole.cryptochart.model.ChartConstants;
 import io.github.thunderrole.cryptochart.model.ChartEntry;
 import io.github.thunderrole.cryptochart.model.LinkChartEntry;
 import io.github.thunderrole.cryptochart.utils.EntryUtils;
@@ -48,6 +49,14 @@ public class CandleCharAdapter extends BaseAdapter<CandleCharAdapter.CandleHolde
         }
 
         LinkChartEntry entry = mLinkChartEntries.get(position);
+
+        if (maxHigh == entry.getEntry()){
+            holder.candleItem.setExtremumType(ChartConstants.MAX_VALUE_TYPE);
+        }else if(minLow == entry.getEntry()){
+            holder.candleItem.setExtremumType(ChartConstants.MIN_VALUE_TYPE);
+        }else {
+            holder.candleItem.setExtremumType(ChartConstants.NORMAL_VALUE_TYPE);
+        }
 
         holder.candleItem.setPoint(entry, mScale, mScaleFactor, minLow);
 

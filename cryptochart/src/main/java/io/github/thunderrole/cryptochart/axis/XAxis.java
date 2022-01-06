@@ -106,8 +106,8 @@ public class XAxis extends View implements BaseAxis {
             if (mLableEntries != null && mLableEntries.size() == mLableNum+1){
                 ChartEntry entry = mLableEntries.get(i);
                 mPaint.setTextSize(20f);
-//                canvas.drawText(DateUtils.getInstance().long2Format(entry.getDate()), nextLineX,yPosition+20,mPaint);
-                canvas.drawText(entry.getDate()+"", nextLineX,yPosition+20,mPaint);
+                canvas.drawText(DateUtils.getInstance().long2Format(entry.getDate()), nextLineX,yPosition+20,mPaint);
+//                canvas.drawText(entry.getDate()+"", nextLineX,yPosition+20,mPaint);
             }
             nextLineX += interval;
         }

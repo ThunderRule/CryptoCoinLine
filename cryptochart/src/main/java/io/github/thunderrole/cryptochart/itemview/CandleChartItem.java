@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 
 import androidx.annotation.Nullable;
 
+import io.github.thunderrole.cryptochart.model.ChartConstants;
 import io.github.thunderrole.cryptochart.model.ChartEntry;
 import io.github.thunderrole.cryptochart.model.LinkChartEntry;
 import io.github.thunderrole.cryptochart.model.Point;
@@ -25,6 +26,7 @@ public class CandleChartItem extends BaseChartItem {
     private Paint mPaint;
     private Path mPath;
     private ChartEntry minEntry;
+    private int mExtremumType = ChartConstants.NORMAL_VALUE_TYPE;
 
     public CandleChartItem(Context context) {
         this(context, null);
@@ -48,6 +50,10 @@ public class CandleChartItem extends BaseChartItem {
     public void setPoint(LinkChartEntry linkChartEntry, float scale, float fingerScale, ChartEntry min) {
         minEntry = min;
         setPoint(linkChartEntry, scale, fingerScale);
+    }
+
+    public void setExtremumType(int type){
+        mExtremumType = type;
     }
 
     @Override
@@ -78,6 +84,13 @@ public class CandleChartItem extends BaseChartItem {
         canvas.drawLine(mid, highY, mid, top, mPaint);
         canvas.drawRect(5 * mFingerScale, top, width - 5 * mFingerScale, top + Math.max(UIUtils.dp2px(getContext(), 1f), candleHeight), mPaint);
         canvas.drawLine(mid, top + candleHeight, mid, lowY, mPaint);
+
+        //绘制极值
+        if (mExtremumType == ChartConstants.MAX_VALUE_TYPE){
+            canvas.drawText("—"+entry.getHigh(),mid,highY,mPaint);
+        }else if (mExtremumType == ChartConstants.MIN_VALUE_TYPE){
+            canvas.drawText("—"+entry.getLow(),mid,lowY,mPaint);
+        }
 
         //绘制曲线图
 //        ChartEntry preEntry = mLinkChartEntry.getPreEntry();

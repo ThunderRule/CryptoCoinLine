@@ -1,8 +1,10 @@
 package io.github.thunderrole.cryptochart;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -24,8 +26,8 @@ import io.github.thunderrole.cryptochart.adapter.CandleCharAdapter;
 import io.github.thunderrole.cryptochart.axis.XAxis;
 import io.github.thunderrole.cryptochart.axis.YAxis;
 import io.github.thunderrole.cryptochart.model.ChartEntry;
-import io.github.thunderrole.cryptochart.model.ChartStyle;
-import io.github.thunderrole.cryptochart.model.Point;
+import io.github.thunderrole.cryptochart.model.ChartConstants;
+import io.github.thunderrole.cryptochart.utils.EntryUtils;
 import io.github.thunderrole.cryptochart.utils.LogUtils;
 import io.github.thunderrole.cryptochart.utils.UIUtils;
 
@@ -46,6 +48,11 @@ public class ChartView extends FrameLayout {
 
     private ScaleGestureDetector mGesture;
     private float mScaleFactor = 0.5f;
+    private float mMaxValueX;
+    private int mItemWidth;
+    private ChartEntry mMaxPrice;
+    private ChartEntry mMinPrice;
+    private Paint mPaint;
 
     public ChartView(@NonNull Context context) {
         this(context, null);
@@ -92,6 +99,8 @@ public class ChartView extends FrameLayout {
             }
         });
 
+        mPaint = new Paint();
+        mPaint.setColor(Color.BLACK);
     }
 
     @Override
@@ -122,10 +131,10 @@ public class ChartView extends FrameLayout {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         switch (mChartType) {
-            case ChartStyle.BAR_CHART:
+            case ChartConstants.BAR_CHART:
                 mAdapter = new BarChartAdapter(getMeasuredHeight() - UIUtils.dp2px(getContext(), 30f));
                 break;
-            case ChartStyle.CANDLE_CHART:
+            case ChartConstants.CANDLE_CHART:
                 mAdapter = new CandleCharAdapter(getMeasuredHeight() - UIUtils.dp2px(getContext(), 30f));
                 break;
             default:
@@ -140,7 +149,7 @@ public class ChartView extends FrameLayout {
             @Override
             public void onClick(ChartEntry entry) {
                 switch (mChartType) {
-                    case ChartStyle.CANDLE_CHART:
+                    case ChartConstants.CANDLE_CHART:
                         Toast.makeText(getContext(), entry.getDate() + "", Toast.LENGTH_LONG).show();
                         break;
                     default:
@@ -175,8 +184,8 @@ public class ChartView extends FrameLayout {
         LogUtils.d("firstP = " + firstPosition + ", lastP = " + lastPosition);
         List<ChartEntry> list = mAdapter.getData();
         if (firstPosition != -1 && lastPosition != -1) {
-            if (list.size() > lastPosition + 1) {
-                return list.subList(firstPosition, lastPosition + 1);
+            if (list.size() > lastPosition) {
+                return list.subList(firstPosition, lastPosition);
             } else {
                 return list;
             }
@@ -217,9 +226,32 @@ public class ChartView extends FrameLayout {
                     nextInterval += interval;
                 }
                 mXAxis.changeData(lableEntry);
+
+                if (mChartType == ChartConstants.CANDLE_CHART){
+
+                    mMaxPrice = EntryUtils.findMaxPrice(visibleEntry);
+                    mMinPrice = EntryUtils.findMinPrice(visibleEntry);
+                    int maxPosition = mList.indexOf(mMaxPrice);
+                    int minPosition = mList.indexOf(mMinPrice);
+                    RecyclerView.ViewHolder holder1 = recyclerView.findViewHolderForAdapterPosition(maxPosition);
+                    if (holder1 != null){
+                        mMaxValueX = holder1.itemView.getX();
+                        mItemWidth = holder1.itemView.getWidth();
+                        invalidate();
+                    }
+                }
+
             }
         });
 
     }
 
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (mChartType == ChartConstants.CANDLE_CHART){
+
+            canvas.drawText("—"+mMaxPrice.getHigh(),mMaxValueX,10,mPaint);
+        }
+        super.onDraw(canvas);
+    }
 }
